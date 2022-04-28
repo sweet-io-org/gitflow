@@ -125,6 +125,58 @@ cmd_default() {
 		git config gitflow.branch.master "$master_branch"
 	fi
 
+        # add a staging branch if no such branch exists yet
+	local staging_branch
+	if gitflow_has_staging_configured && ! flag force; then
+		staging_branch=$(git config --get gitflow.branch.staging)
+	else
+		# Again, the same two cases as with the master selection are
+		# considered (fresh repo or repo that contains branches)
+		local default_suggestion
+		local should_check_existence
+		branch_count=$(git_local_branches | grep -v "^${master_branch}\$" | wc -l)
+		if [ "$branch_count" -eq 0 ]; then
+			should_check_existence=NO
+			default_suggestion=$(git config --get gitflow.branch.staging || echo staging)
+		else
+			echo
+			echo "Which branch should be used for integration of the \"next release\"?"
+			git_local_branches | grep -v "^${master_branch}\$" | sed 's/^.*$/   - &/g'
+
+			should_check_existence=YES
+			default_suggestion=
+			for guess in $(git config --get gitflow.branch.staging) \
+			             'staging' 'int' 'integration' 'master'; do
+				if git_local_branch_exists "$guess"; then
+					default_suggestion="$guess"
+					break
+				fi
+			done
+		fi
+
+		printf "Branch name for \"next release\" staging: [$default_suggestion] "
+		if noflag defaults; then
+			read answer
+		else
+			printf "\n"
+		fi
+		staging_branch=${answer:-$default_suggestion}
+
+		if [ "$master_branch" = "$staging_branch" ]; then
+			die "Production and integration branches should differ."
+		fi
+
+		# check existence in case of an already existing repo
+		if [ "$should_check_existence" = "YES" ]; then
+			git_local_branch_exists "$staging_branch" || \
+				die "Local branch '$staging_branch' does not exist."
+		fi
+
+		# store the name of the develop branch
+		git config gitflow.branch.staging "$staging_branch"
+	fi
+        
+
 	# add a develop branch if no such branch exists yet
 	local develop_branch
 	if gitflow_has_develop_configured && ! flag force; then
@@ -164,6 +216,10 @@ cmd_default() {
 
 		if [ "$master_branch" = "$develop_branch" ]; then
 			die "Production and integration branches should differ."
+		fi
+
+		if [ "staging_branch" = "$develop_branch" ]; then
+			die "Production and staging branches should differ."
 		fi
 
 		# check existence in case of an already existing repo
