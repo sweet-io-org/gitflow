@@ -167,7 +167,7 @@ gitflow_has_staging_configured() {
 	local staging=$(git config --get gitflow.branch.staging)
 	[ "$staging" != "" ] && git_local_branch_exists "$staging"
 }
-}
+
 
 gitflow_has_prefixes_configured() {
 	git config --get gitflow.prefix.feature >/dev/null 2>&1     && \
