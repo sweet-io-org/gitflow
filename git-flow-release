@@ -209,7 +209,6 @@ cmd_stage() {
 		  die "There were merge conflicts."
 		  # TODO: What do we do now?
 	fi
-        
         # try to merge into develop
 	if ! git_is_branch_merged_into "$BRANCH" "$DEVELOP_BRANCH"; then
 		git checkout "$DEVELOP_BRANCH" || \
@@ -221,13 +220,11 @@ cmd_stage() {
 		  die "There were merge conflicts."
 		  # TODO: What do we do now?
 	fi
-
+        
         git push "$ORIGIN" "$STAGING_BRANCH" || \
 		die "Could not push to $STAGING_BRANCH from $ORIGIN."
 	git push "$ORIGIN" "$DEVELOP_BRANCH" || \
 		die "Could not push to $DEVELOP_BRANCH from $ORIGIN."
-	git push "$ORIGIN" :"$BRANCH" || \
-		die "Could not delete the remote $BRANCH in $ORIGIN."
 	echo
 	echo "Summary of actions:"
 	echo "- Latest objects have been fetched from '$ORIGIN'"
@@ -235,6 +232,7 @@ cmd_stage() {
 	echo "- Release branch has been back-merged into '$DEVELOP_BRANCH'"
 	echo "- '$DEVELOP_BRANCH', '$STAGING_BRANCH' and tags have been pushed to '$ORIGIN'"
 	echo
+}
 
 
 cmd_finish() {
@@ -315,14 +313,6 @@ cmd_finish() {
 		  # TODO: What do we do now?
 	fi
 
-	# delete branch
-	if noflag keep; then
-		if [ "$BRANCH" = "$(git_current_branch)" ]; then
-			git checkout "$MASTER_BRANCH"
-		fi
-		git branch -d "$BRANCH"
-	fi
-
 	if flag push; then
 		git push "$ORIGIN" "$DEVELOP_BRANCH" || \
 			die "Could not push to $DEVELOP_BRANCH from $ORIGIN."
@@ -332,9 +322,19 @@ cmd_finish() {
 			git push --tags "$ORIGIN" || \
 			  die "Could not push tags to $ORIGIN."
 		fi
-		git push "$ORIGIN" :"$BRANCH" || \
-			die "Could not delete the remote $BRANCH in $ORIGIN."
+		git push "$ORIGIN" "$BRANCH" || \
+			die "Could not push to $BRANCH from $ORIGIN."
 	fi
+
+
+	# delete branch
+	if noflag keep; then
+		if [ "$BRANCH" = "$(git_current_branch)" ]; then
+			git checkout "$MASTER_BRANCH"
+		fi
+		git branch -d "$BRANCH"
+	fi
+
 
 	echo
 	echo "Summary of actions:"
