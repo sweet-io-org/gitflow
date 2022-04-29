@@ -51,6 +51,7 @@ usage() {
 	echo "       git flow feature rebase [-i] [<name|nameprefix>]"
 	echo "       git flow feature checkout [<name|nameprefix>]"
 	echo "       git flow feature pull <remote> [<name>]"
+        echo "       git flow feature pr <name>"
 }
 
 cmd_default() {
@@ -358,6 +359,37 @@ helper_finish_cleanup() {
 		echo "- Feature branch '$BRANCH' has been removed"
 	fi
 	echo "- You are now on branch '$DEVELOP_BRANCH'"
+	echo
+}
+
+
+cmd_pr() {
+	parse_args "$@"
+	expand_nameprefix_arg
+
+	# sanity checks
+	require_clean_working_tree
+	require_branch "$BRANCH"
+	git fetch -q "$ORIGIN"
+
+	# create remote branch
+	git push "$ORIGIN" "$BRANCH:refs/heads/$BRANCH"
+	git fetch -q "$ORIGIN"
+
+	# configure remote tracking
+	git config "branch.$BRANCH.remote" "$ORIGIN"
+	git config "branch.$BRANCH.merge" "refs/heads/$BRANCH"
+	git checkout "$BRANCH"
+
+        echo "creating PR via gh"
+        gh pr create 
+
+	echo
+	echo "Summary of actions:"
+	echo "- A new remote branch '$BRANCH' was created"
+	echo "- The local branch '$BRANCH' was configured to track the remote branch"
+        echo "- A PR was created for '$BRANCH'"
+	echo "- You are now on branch '$BRANCH'"
 	echo
 }
 
