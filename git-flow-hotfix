@@ -233,6 +233,7 @@ cmd_stage() {
 	echo "- Hotfix branch has been back-merged into '$DEVELOP_BRANCH'"
 	echo "- '$DEVELOP_BRANCH', '$STAGING_BRANCH' and tags have been pushed to '$ORIGIN'"
 	echo
+}
 
 
 cmd_finish() {
