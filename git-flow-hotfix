@@ -174,7 +174,7 @@ cmd_start() {
 
 	# create branch
 	git checkout -b "$BRANCH" "$BASE"
-
+        git push --set-upstream "$ORIGIN" "$BRANCH"
 	echo
 	echo "Summary of actions:"
 	echo "- A new branch '$BRANCH' was created, based on '$BASE'"
@@ -226,6 +226,9 @@ cmd_stage() {
 
         git push "$ORIGIN" "$DEVELOP_BRANCH" || \
 		die "Could not push to $DEVELOP_BRANCH from $ORIGIN."
+
+        git push "$ORIGIN" "$BRANCH" || \
+                die "Could not push to $BRANCH from $ORIGIN."
 
 	echo
 	echo "Summary of actions:"
